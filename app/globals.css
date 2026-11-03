@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #f7fbff;
+  color: #182230;
+}
+
+a {
+  text-decoration: none;
+}
+
+.medical-grid {
+  background-image:
+    linear-gradient(rgba(18, 102, 227, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(18, 102, 227, 0.08) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+.focus-ring {
+  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-clinic-blue focus-visible:ring-offset-2;
+}
