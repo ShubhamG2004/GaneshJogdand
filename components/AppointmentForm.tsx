@@ -109,7 +109,7 @@ export function AppointmentForm() {
           required
           maxLength={30}
           className="focus-ring rounded border border-slate-300 px-3 py-3 font-normal"
-          placeholder="+91 7057652014"
+          placeholder="+91 9087654321"
         />
       </label>
 

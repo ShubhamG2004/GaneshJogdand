@@ -21,6 +21,17 @@ export type Review = {
   createdAt: string;
 };
 
+export type Appointment = {
+  id: string;
+  createdAt: string;
+  status: string;
+  name: string;
+  email: string;
+  phone: string;
+  service: string;
+  message: string;
+};
+
 export type Story = {
   id: string;
   title: string;

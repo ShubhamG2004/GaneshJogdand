@@ -1,7 +1,29 @@
 
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { getFirebaseDb } from "@/lib/firebase-admin";
+import { getFirebaseDb, isDoctorToken } from "@/lib/firebase-admin";
+
+export async function GET(request: Request) {
+  const authorization = request.headers.get("authorization");
+  const token = authorization?.startsWith("Bearer ") ? authorization.slice(7) : null;
+
+  if (!token) {
+    return NextResponse.json({ error: "Doctor authentication is required." }, { status: 401 });
+  }
+
+  try {
+    if (!(await isDoctorToken(token))) {
+      return NextResponse.json({ error: "Only the doctor account can view appointments." }, { status: 403 });
+    }
+
+    const snapshot = await getFirebaseDb().collection("appointments").orderBy("createdAt", "desc").get();
+    const appointments = snapshot.docs.map((document) => document.data());
+    return NextResponse.json({ appointments });
+  } catch (error) {
+    console.error("Appointment lookup error:", error);
+    return NextResponse.json({ error: getAppointmentLookupError(error) }, { status: 503 });
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -224,4 +246,18 @@ function escapeHtml(value: string) {
 
     return entities[char];
   });
+}
+
+function getAppointmentLookupError(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+
+  if (message.includes("ENOTFOUND") || message.includes("www.googleapis.com")) {
+    return "Unable to connect to Firebase right now. Check the server's internet/DNS access and try again.";
+  }
+
+  if (message.includes("Firebase is not configured") || message.includes("Firebase authentication is not configured")) {
+    return "Firebase is not configured on the server. Add the required Firebase Admin environment variables.";
+  }
+
+  return "Unable to load appointments right now. Please try again.";
 }
