@@ -255,6 +255,7 @@ function escapeHtml(value: string) {
 
 function getAppointmentLookupError(error: unknown) {
   const message = error instanceof Error ? error.message : "";
+  const normalizedMessage = message.toLowerCase();
 
   if (message.includes("ENOTFOUND") || message.includes("www.googleapis.com")) {
     return "Unable to connect to Firebase right now. Check the server's internet/DNS access and try again.";
@@ -264,5 +265,23 @@ function getAppointmentLookupError(error: unknown) {
     return "Firebase is not configured on the server. Add the required Firebase Admin environment variables.";
   }
 
+  if (
+    normalizedMessage.includes("invalid_grant") ||
+    normalizedMessage.includes("private key") ||
+    normalizedMessage.includes("service account") ||
+    normalizedMessage.includes("credential")
+  ) {
+    return "Firebase Admin credentials are invalid on the server. Recheck FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY in Netlify.";
+  }
+
+  if (normalizedMessage.includes("auth/") || normalizedMessage.includes("id token")) {
+    return "Firebase authentication failed. Confirm the deployed Firebase project and DOCTOR_EMAIL match the signed-in doctor account.";
+  }
+
+  if (normalizedMessage.includes("permission_denied") || normalizedMessage.includes("permission denied")) {
+    return "Firebase denied access to appointments. Check the server service account permissions for Firestore.";
+  }
+
+  console.error("Unclassified appointment lookup error:", message);
   return "Unable to load appointments right now. Please try again.";
 }
