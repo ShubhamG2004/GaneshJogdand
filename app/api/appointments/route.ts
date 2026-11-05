@@ -1,7 +1,5 @@
 
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
-import { getFirebaseDb, isDoctorToken } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +13,8 @@ export async function GET(request: Request) {
   }
 
   try {
+    const { getFirebaseDb, isDoctorToken } = await import("@/lib/firebase-admin");
+
     if (!(await isDoctorToken(token))) {
       return NextResponse.json({ error: "Only the doctor account can view appointments." }, { status: 403 });
     }
@@ -85,6 +85,7 @@ export async function POST(request: Request) {
 
     // Save to Firebase
     try {
+      const { getFirebaseDb } = await import("@/lib/firebase-admin");
       await getFirebaseDb()
         .collection("appointments")
         .doc(appointment.id)
@@ -121,6 +122,7 @@ export async function POST(request: Request) {
     }
 
     // Create SMTP transporter
+    const { default: nodemailer } = await import("nodemailer");
     const transporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
