@@ -67,13 +67,17 @@ export function AdminDashboard() {
             Authorization: `Bearer ${token}`
           }
         });
-        const result = await response.json();
+        const result = await readApiResponse(response);
 
         if (!response.ok) {
           throw new Error(result.error || "Unable to load appointments.");
         }
 
-        setAppointments(result.appointments);
+        if (!Array.isArray(result.appointments)) {
+          throw new Error("The appointments service returned an invalid response.");
+        }
+
+        setAppointments(result.appointments as Appointment[]);
       } catch (error) {
         setAppointmentsMessage(error instanceof Error ? error.message : "Unable to load appointments.");
       } finally {
@@ -267,6 +271,30 @@ export function AdminDashboard() {
       </div>
     </section>
   );
+}
+
+type AppointmentApiResponse = {
+  error?: string;
+  appointments?: unknown;
+};
+
+async function readApiResponse(response: Response): Promise<AppointmentApiResponse> {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (!contentType.includes("application/json")) {
+    const body = await response.text();
+    console.error("Appointments API returned a non-JSON response:", {
+      status: response.status,
+      body: body.slice(0, 200)
+    });
+    throw new Error(
+      response.status === 404
+        ? "The appointments API is not available in this production deployment."
+        : "The appointments service returned an unexpected response."
+    );
+  }
+
+  return response.json() as Promise<AppointmentApiResponse>;
 }
 
 function Field({ name, label, placeholder, required }: { name: string; label: string; placeholder: string; required?: boolean }) {

@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { getFirebaseDb, isDoctorToken } from "@/lib/firebase-admin";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const authorization = request.headers.get("authorization");
   const token = authorization?.startsWith("Bearer ") ? authorization.slice(7) : null;
