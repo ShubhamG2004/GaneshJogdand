@@ -289,12 +289,17 @@ async function readApiResponse(response: Response): Promise<AppointmentApiRespon
     });
     throw new Error(
       response.status === 404
-        ? "The appointments API is not available in this production deployment."
-        : "The appointments service returned an unexpected response."
+        ? "The appointments API is not available in this production deployment. Redeploy the latest Next.js server build."
+        : `The appointments service returned an unexpected response (HTTP ${response.status}).`
     );
   }
 
-  return response.json() as Promise<AppointmentApiResponse>;
+  try {
+    return await response.json() as AppointmentApiResponse;
+  } catch (error) {
+    console.error("Appointments API returned invalid JSON:", error);
+    throw new Error("The appointments service returned invalid JSON.");
+  }
 }
 
 function Field({ name, label, placeholder, required }: { name: string; label: string; placeholder: string; required?: boolean }) {
