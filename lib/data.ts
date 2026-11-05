@@ -6,8 +6,8 @@ export const doctor = {
   city: "Pune",
   experience: "1 year",
   clinicAddress: "Pune, Maharashtra",
-  phone: "+91 98765 43210",
-  whatsapp: "919876543210",
+  phone: "+91 98232 42167",
+  whatsapp: "919823242167",
   email: "clinic@example.com",
   about:
     "Physiotherapy visits at home in Pune, with assessment-led support for pain, mobility, post-surgery recovery, and neurological rehabilitation. Treatment options may include exercise therapy, dry needling, or cupping when appropriate after assessment.",

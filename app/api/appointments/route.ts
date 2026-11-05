@@ -283,5 +283,5 @@ function getAppointmentLookupError(error: unknown) {
   }
 
   console.error("Unclassified appointment lookup error:", message);
-  return "Unable to load appointments right now. Please try again.";
+  return "Firebase could not load appointments. Check the Netlify function logs and Firebase Admin configuration.";
 }

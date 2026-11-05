@@ -30,6 +30,7 @@ export function AdminDashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [appointmentsLoading, setAppointmentsLoading] = useState(false);
   const [appointmentsMessage, setAppointmentsMessage] = useState("");
+  const [appointmentsRetry, setAppointmentsRetry] = useState(0);
   const [message, setMessage] = useState("");
 
   const totalViews = useMemo(() => videos.reduce((sum, video) => sum + video.views, 0), [videos]);
@@ -86,7 +87,7 @@ export function AdminDashboard() {
     }
 
     void loadAppointments();
-  }, [loggedIn]);
+  }, [loggedIn, appointmentsRetry]);
 
   async function login(event: FormEvent) {
     event.preventDefault();
@@ -261,7 +262,7 @@ export function AdminDashboard() {
           <div id="appointments" className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center"><PanelHeading icon={<CalendarCheck size={20} />} eyebrow="Patient care" title="Appointment requests" description="Review patient contact details and visit requirements." /><span className={`rounded-full px-3 py-1 text-xs font-bold ${appointmentsMessage ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-clinic-blue"}`}>{appointmentsMessage ? "Unavailable" : `${appointments.length} total`}</span></div>
             {appointmentsLoading ? <p className="mt-5 text-sm text-slate-500">Loading appointments...</p> : null}
-            {appointmentsMessage ? <p className="mt-5 rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{appointmentsMessage}</p> : null}
+            {appointmentsMessage ? <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-700"><p>{appointmentsMessage}</p><button type="button" onClick={() => setAppointmentsRetry((current) => current + 1)} className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-red-700 shadow-sm hover:bg-red-100">Retry</button></div> : null}
             {!appointmentsLoading && !appointmentsMessage && appointments.length === 0 ? <p className="mt-5 rounded-xl bg-slate-50 px-3 py-4 text-sm text-slate-600">No appointment requests yet.</p> : null}
             <div className="mt-5 grid gap-3">{appointments.map((appointment) => <article key={appointment.id} className="rounded-xl border border-slate-100 bg-slate-50/70 p-4"><div className="flex flex-col justify-between gap-3 sm:flex-row"><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-bold text-ink">{appointment.name}</h3><span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold capitalize text-emerald-700"><CheckCircle2 size={12} /> {appointment.status}</span></div><p className="mt-1 text-xs text-slate-500">{formatAppointmentDate(appointment.createdAt)}</p></div><p className="text-sm font-bold text-clinic-teal">{appointment.service}</p></div><div className="mt-4 grid gap-2 text-sm text-slate-700 sm:grid-cols-2"><p><span className="font-bold">Email:</span> <a className="text-clinic-blue hover:underline" href={`mailto:${appointment.email}`}>{appointment.email}</a></p><p><span className="font-bold">Phone:</span> <a className="text-clinic-blue hover:underline" href={`tel:${appointment.phone}`}>{appointment.phone}</a></p></div><p className="mt-3 whitespace-pre-wrap rounded-lg bg-white p-3 text-sm leading-6 text-slate-600">{appointment.message}</p></article>)}</div>
           </div>
