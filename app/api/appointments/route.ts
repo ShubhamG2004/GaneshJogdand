@@ -15,13 +15,29 @@ export async function GET(request: Request) {
   try {
     const { getFirebaseDb, isDoctorToken } = await import("@/lib/firebase-admin");
 
-    if (!(await isDoctorToken(token))) {
+    let isDoctor = false;
+    try {
+      isDoctor = await isDoctorToken(token);
+    } catch (error) {
+      console.error("Doctor token verification error:", error);
+      return NextResponse.json(
+        { error: getDoctorAuthenticationError(error) },
+        { status: 401 }
+      );
+    }
+
+    if (!isDoctor) {
       return NextResponse.json({ error: "Only the doctor account can view appointments." }, { status: 403 });
     }
 
-    const snapshot = await getFirebaseDb().collection("appointments").orderBy("createdAt", "desc").get();
-    const appointments = snapshot.docs.map((document) => document.data());
-    return NextResponse.json({ appointments });
+    try {
+      const snapshot = await getFirebaseDb().collection("appointments").orderBy("createdAt", "desc").get();
+      const appointments = snapshot.docs.map((document) => document.data());
+      return NextResponse.json({ appointments });
+    } catch (error) {
+      console.error("Appointment Firestore lookup error:", error);
+      return NextResponse.json({ error: getAppointmentLookupError(error) }, { status: 503 });
+    }
   } catch (error) {
     console.error("Appointment lookup error:", error);
     return NextResponse.json({ error: getAppointmentLookupError(error) }, { status: 503 });
@@ -253,9 +269,38 @@ function escapeHtml(value: string) {
   });
 }
 
+function getDoctorAuthenticationError(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  const code = typeof error === "object" && error !== null && "code" in error
+    ? String(error.code)
+    : "";
+  const normalizedMessage = `${code} ${message}`.toLowerCase();
+
+  if (normalizedMessage.includes("firebase authentication is not configured")) {
+    return "Firebase Admin authentication is not configured. Add DOCTOR_EMAIL and the three FIREBASE_* server variables in Netlify.";
+  }
+
+  if (normalizedMessage.includes("invalid_grant") || normalizedMessage.includes("private key") || normalizedMessage.includes("service account")) {
+    return "Firebase Admin credentials are invalid. Recheck FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY in Netlify.";
+  }
+
+  if (normalizedMessage.includes("auth/id-token-expired") || normalizedMessage.includes("auth/id-token-revoked")) {
+    return "Your doctor session has expired. Sign out and sign in again.";
+  }
+
+  if (normalizedMessage.includes("auth/invalid") || normalizedMessage.includes("auth/argument-error") || normalizedMessage.includes("id token")) {
+    return "The deployed site is using a Firebase token from a different project or an invalid doctor session. Verify the NEXT_PUBLIC_FIREBASE_* variables in Netlify.";
+  }
+
+  return "Doctor authentication could not be verified. Check the Netlify function logs for the Firebase error.";
+}
+
 function getAppointmentLookupError(error: unknown) {
   const message = error instanceof Error ? error.message : "";
-  const normalizedMessage = message.toLowerCase();
+  const code = typeof error === "object" && error !== null && "code" in error
+    ? String(error.code)
+    : "";
+  const normalizedMessage = `${code} ${message}`.toLowerCase();
 
   if (message.includes("ENOTFOUND") || message.includes("www.googleapis.com")) {
     return "Unable to connect to Firebase right now. Check the server's internet/DNS access and try again.";
