@@ -17,6 +17,7 @@ export function VideoLibrary() {
     });
   }, [category, query]);
 
+  
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="grid gap-4 rounded border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_auto]">
